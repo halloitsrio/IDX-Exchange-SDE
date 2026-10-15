@@ -11,6 +11,10 @@ function parseInteger(value, { min, max } = {}) {
   return n;
 }
 
+function isValidListingId(id) {
+  return return /^\d{1,20}$/.test(id);
+}
+
 router.get("/", async (req, res) => {
   try {
     const { city, zipcode, minPrice, maxPrice, beds, baths } = req.query;
@@ -70,7 +74,7 @@ router.get("/", async (req, res) => {
 
     const whereClause = conditions.length ? "WHERE " + conditions.join(" AND ") : "";
 
-    // ---------- 3. Run both queries ----------
+   
     const finalLimit = limit ?? 20;
     const finalOffset = offset ?? 0;
 
@@ -84,7 +88,7 @@ router.get("/", async (req, res) => {
       //    L_SystemPrice, L_Keyword2 AS beds, LM_Dec_3 AS baths
    //FROM rets_property ${whereClause} ORDER BY id LIMIT ? OFFSET ?`,
   //[...values, finalLimit, finalOffset]
-        `SELECT * FROM rets_property ${whereClause} ORDER BY id LIMIT ? OFFSET ?`,
+        `SELECT * FROM rets_property ${whereClause} ORDER BY L_ListingID LIMIT ? OFFSET ?`,
       [...values, finalLimit, finalOffset]
     );
 
@@ -96,6 +100,62 @@ router.get("/", async (req, res) => {
     });
   } catch (err) {
     console.error(err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/:id/openhouses", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidListingId(id)) {
+        return res.status(400).json({
+            error: "Invalid listing ID. Use 1-50 letters, numbers, dashes, or underscores.",
+        });
+    }
+
+    const [props] = await pool.query(
+      "SELECT L_ListingID FROM rets_property WHERE L_ListingID = ?",
+      [id]
+    );
+    if (props.length === 0) {
+      return res.status(404).json({ error: `Property ${id} not found` });
+    }
+
+    const [events] = await pool.query(
+      "SELECT * FROM rets_openhouse WHERE L_ListingID = ? ORDER BY OpenHouseDate, OH_StartTime",
+      [id]
+    );
+
+    res.json(events);
+  } catch (err) {
+    console.error("Open houses error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!isValidListingId(id)) {
+        return res.status(400).json({
+            error: "Invalid listing ID. Use 1-50 letters, numbers, dashes, or underscores.",
+        });
+    }
+
+    const [rows] = await pool.query(
+      "SELECT * FROM rets_property WHERE L_ListingID = ?",
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: `Property ${id} not found` });
+    }
+
+    res.json(rows[0]);
+  } catch (err) {
+    console.error("Property detail error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

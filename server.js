@@ -7,6 +7,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use((req, res, next) => {
+  const start = Date.now();
+
+  res.on("finish", () => {
+    console.log(
+      `${new Date().toISOString()} ${req.method} ${req.originalUrl} ${res.statusCode} ${Date.now() - start}ms`
+    );
+  });
+
+  next();
+});
+
 const propertiesRouter = require("./routes/properties");
 app.use("/api/properties", propertiesRouter);
 
