@@ -86,7 +86,7 @@ router.get("/", async (req, res) => {
     const [rows] = await pool.query(
       `SELECT id, L_ListingID, L_Address, L_City, L_State, L_Zip,
               L_SystemPrice, L_Keyword2 AS beds, LM_Dec_3 AS baths,
-              LotSizeSquareFeet AS sqft, L_Photos
+              LM_Int2_3 AS sqft, L_Photos
       FROM rets_property ${whereClause} ORDER BY id LIMIT ? OFFSET ?`,
       [...values, finalLimit, finalOffset]
     );

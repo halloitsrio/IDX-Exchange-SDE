@@ -10,3 +10,8 @@
 .card-body { padding: 12px 16px; }
 .card-body h2 { margin: 0 0 6px; font-size: 20px; }
 .card-body p { margin: 2px 0; color: #444; }
+
+.filters { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: end; margin-bottom: 20px; }
+.filters label { display: block; font-size: 12px; color: #555; }
+.filters input, .filters select { display: block; padding: 6px; width: 120px; }
+.filters button { padding: 8px 14px; cursor: pointer; }
